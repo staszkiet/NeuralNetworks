@@ -23,7 +23,7 @@ runner.configure_model(
     loss_func="cce",
     seed=42,
 )
-runner.run_experiment(train_file, epochs=300, learning_rate=0.01, batch_size=32)
+runner.run_experiment(train_file, epochs=300, learning_rate=0.1, batch_size=32)
 
 X_train, Y_train = runner.load_dataset(train_file)
 datasets = [(X_train, Y_train, f"Trening\n{train_file}")]

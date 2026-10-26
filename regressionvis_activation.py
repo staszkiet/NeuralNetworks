@@ -26,7 +26,7 @@ test_file = test_path(train_file)
 runner = MLPExperimentRunner(data_dir=base_dir)
 
 runner.configure_model(layer_dims=[1, 10, 1], hidden_activation="relu", loss_func="mse", seed=42)
-runner.run_experiment(train_file, epochs=200, learning_rate=0.01)
+runner.run_experiment(train_file, epochs=200, learning_rate=0.1)
 
 X_train, Y_train = runner.load_dataset(train_file)
 panels = [(X_train, Y_train, f"Trening\n{train_file}")]

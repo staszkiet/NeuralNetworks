@@ -58,7 +58,7 @@ runner.configure_model(
 history = runner.run_experiment(
     cfg["train_file"],
     epochs=cfg["epochs"],
-    learning_rate=0.01,
+    learning_rate=0.1,
     batch_size=32,
 )
 
