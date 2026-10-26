@@ -37,7 +37,6 @@ class ActivationFunctions:
 
     @staticmethod
     def softmax(z):
-        # Numerycznie stabilny softmax (odejmowanie max wiersza)
         exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))
         return exp_z / np.sum(exp_z, axis=0, keepdims=True)
 
@@ -45,24 +44,20 @@ class ActivationFunctions:
 class LossFunctions:
     @staticmethod
     def mse(y_hat, y):
-        """Błąd średniokwadratowy (Mean Squared Error)"""
         return 0.5 * np.mean(np.sum((y_hat - y) ** 2, axis=0))
 
     @staticmethod
     def mae(y_hat, y):
-        """Średni błąd bezwzględny (Mean Absolute Error)"""
         return np.mean(np.sum(np.abs(y_hat - y), axis=0))
 
     @staticmethod
     def bce(y_hat, y):
-        """Binarna entropia krzyżowa (Binary Cross-Entropy)"""
         eps = 1e-15
         y_hat = np.clip(y_hat, eps, 1 - eps)
         return -np.mean(np.sum(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat), axis=0))
 
     @staticmethod
     def cce(y_hat, y):
-        """Kategoryczna entropia krzyżowa (Categorical Cross-Entropy)"""
         eps = 1e-15
         y_hat = np.clip(y_hat, eps, 1 - eps)
         return -np.mean(np.sum(y * np.log(y_hat), axis=0))
@@ -70,10 +65,6 @@ class LossFunctions:
 
 class MultiLayerPerceptron:
     def __init__(self, layer_dims, hidden_activation='sigmoid', seed=None):
-        """
-        layer_dims: lista określająca liczbę neuronów w warstwach, np. [input_dim, 8, 4, output_dim]
-        hidden_activation: 'sigmoid', 'tanh', lub 'relu'
-        """
         if seed is not None:
             np.random.seed(seed)
             
@@ -81,7 +72,6 @@ class MultiLayerPerceptron:
         self.W = []
         self.b = []
         
-        # Mapa funkcji aktywacji dla warstw ukrytych
         act_map = {
             'sigmoid': (ActivationFunctions.sigmoid, ActivationFunctions.sigmoid_prime),
             'tanh': (ActivationFunctions.tanh, ActivationFunctions.tanh_prime),
@@ -98,7 +88,6 @@ class MultiLayerPerceptron:
             self.b.append(b)
 
     def forward(self, X):
-        """Przekaz w przód (Forward Pass)"""
         A = X
         self.cache = {'A0': A}
         
@@ -106,7 +95,6 @@ class MultiLayerPerceptron:
             Z = np.dot(self.W[l], A) + self.b[l]
             self.cache[f'Z{l+1}'] = Z
             
-            # Dobór aktywacji wyjścia odpowiednio do zadania
             if l == self.L - 1:
                 if self.task_type == 'regression':
                     A = ActivationFunctions.linear(Z)
@@ -122,7 +110,6 @@ class MultiLayerPerceptron:
         return A
 
     def compute_loss(self, Y_hat, Y):
-        """Obliczenie straty z wykorzystaniem klasy statycznej LossFunctions"""
         if self.loss_func == 'mse':
             return LossFunctions.mse(Y_hat, Y)
         elif self.loss_func == 'mae':
@@ -133,7 +120,6 @@ class MultiLayerPerceptron:
             return LossFunctions.cce(Y_hat, Y)
 
     def backward(self, Y):
-        """Propagacja wsteczna (Backpropagation)"""
         m = Y.shape[1]
         self.grads = {}
         AL = self.cache[f'A{self.L}']
@@ -173,13 +159,11 @@ class MultiLayerPerceptron:
                 dZ = np.dot(self.W[l-1].T, dZ) * self.hidden_activation_prime(Z_prev)
 
     def update_parameters(self, learning_rate):
-        """Aktualizacja wag za pomocą SGD"""
         for l in range(1, self.L + 1):
             self.W[l-1] -= learning_rate * self.grads[f'dW{l}']
             self.b[l-1] -= learning_rate * self.grads[f'db{l}']
 
     def fit(self, X, Y, epochs=100, learning_rate=0.01, batch_size=32, task_type='regression', loss_func='mse'):
-        """Główna pętla ucząca"""
         self.task_type = task_type
         self.loss_func = loss_func
         n_samples = X.shape[1]

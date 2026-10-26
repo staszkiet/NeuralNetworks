@@ -1,4 +1,3 @@
-"""Wizualizacja klasyfikacji binarnej: data.simple (2D) — train i test."""
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,19 +14,15 @@ train_file = os.path.join("classification", "data.simple.train.1000.csv")
 test_file = test_path(train_file)
 
 runner = MLPExperimentRunner(data_dir=base_dir)
-if not os.path.exists(os.path.join(base_dir, train_file)):
-    raise SystemExit(f"Brak pliku: {train_file}")
-
 runner.configure_model(layer_dims=[2, 16, 8, 1], hidden_activation="tanh", loss_func="bce", seed=42)
 runner.run_experiment(train_file, epochs=300, learning_rate=0.01, batch_size=32)
 
 X_train, Y_train = runner.load_dataset(train_file)
 datasets = [(X_train, Y_train, f"Trening\n{train_file}")]
 
-if os.path.exists(os.path.join(base_dir, test_file)):
-    X_test, Y_test = runner.load_dataset(test_file)
-    datasets.append((X_test, Y_test, f"Test\n{test_file}"))
-    runner.evaluate(test_file)
+X_test, Y_test = runner.load_dataset(test_file)
+datasets.append((X_test, Y_test, f"Test\n{test_file}"))
+runner.evaluate(test_file)
 
 x_min, x_max, y_min, y_max = xy_bounds(*[(X, Y) for X, Y, _ in datasets])
 xx, yy, grid = classification_grid(x_min, x_max, y_min, y_max)

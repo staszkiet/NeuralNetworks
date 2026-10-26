@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
 
-TASK = "simple"  # activation | cube | simple | three_gauss
+TASK = "three_gauss"  # activation | cube | simple | three_gauss
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -44,13 +44,9 @@ EXPERIMENTS = {
     },
 }
 
-if TASK not in EXPERIMENTS:
-    raise SystemExit(f"Nieznany TASK={TASK!r}. Dostępne: {', '.join(EXPERIMENTS)}")
 
 cfg = EXPERIMENTS[TASK]
 train_path = os.path.join(base_dir, cfg["train_file"])
-if not os.path.exists(train_path):
-    raise SystemExit(f"Brak pliku: {cfg['train_file']}")
 
 runner = MLPExperimentRunner(data_dir=base_dir)
 runner.configure_model(
@@ -72,7 +68,7 @@ epochs_x = range(1, len(losses) + 1)
 plt.figure(figsize=(8, 5))
 plt.plot(epochs_x, losses, color="purple", linewidth=2, label=f"Loss ({cfg['loss_func'].upper()})")
 plt.title(f"Krzywa uczenia — {cfg['task_label']}\n{cfg['train_file']}")
-plt.xlabel("Epoka")
+plt.xlabel("Epoch")
 plt.ylabel("Strata")
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.legend()
