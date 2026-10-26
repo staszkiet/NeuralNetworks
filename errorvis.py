@@ -1,5 +1,5 @@
 """
-Krzywa straty w epokach. Ustaw TASK na jeden z: activation, cube, simple, three_gauss.
+Krzywa straty względem epoch. Ustaw TASK na jeden z: activation, cube, simple, three_gauss.
 """
 import os
 import matplotlib.pyplot as plt

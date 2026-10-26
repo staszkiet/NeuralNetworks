@@ -196,7 +196,7 @@ class MultiLayerPerceptron:
             history['weights'].append([w.copy() for w in self.W])
             
             if (epoch + 1) % max(1, epochs // 10) == 0:
-                print(f"Epoka {epoch+1}/{epochs} | Strata ({loss_func.upper()}): {epoch_loss:.6f}")
+                print(f"Epoch {epoch+1}/{epochs} | Strata ({loss_func.upper()}): {epoch_loss:.6f}")
                 
         return history
 

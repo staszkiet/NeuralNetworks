@@ -1,5 +1,5 @@
 """
-Wizualizacja wag w kolejnych epokach (history['weights'] z fit()).
+Wizualizacja wag w kolejnych epoch (history['weights'] z fit()).
 Ustaw TASK jak w errorvis.py.
 """
 import os
@@ -80,15 +80,15 @@ epochs_x = range(1, len(weight_history) + 1)
 for layer_i in range(n_layers):
     norms = [np.linalg.norm(weight_history[e][layer_i], "fro") for e in range(len(weight_history))]
     plt.plot(epochs_x, norms, linewidth=2, label=f"Warstwa {layer_i + 1} (W)")
-plt.title(f"Norma wag w epokach — {cfg['task_label']}")
-plt.xlabel("Epoka")
+plt.title(f"Norma wag w epoch — {cfg['task_label']}")
+plt.xlabel("Epoch")
 plt.ylabel("||W||_F")
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.legend()
 plt.tight_layout()
 plt.show()
 
-# --- Wykres 2: mapy ciepła W w wybranych epokach (wiersz = warstwa) ---
+# --- Wykres 2: mapy ciepła W w wybranych epoch (wiersz = warstwa) ---
 n_snaps = len(snap_idxs)
 fig, axes = plt.subplots(n_layers, n_snaps, figsize=(2.2 * n_snaps, 2.5 * n_layers), squeeze=False)
 
@@ -100,7 +100,7 @@ for layer_i in range(n_layers):
     for col, (ei, W) in enumerate(zip(snap_idxs, mats)):
         ax = axes[layer_i, col]
         im = ax.imshow(W, aspect="auto", cmap="RdBu_r", vmin=-vmax, vmax=vmax)
-        ax.set_title(f"ep. {ei + 1}", fontsize=9)
+        ax.set_title(f"epoch {ei + 1}", fontsize=9)
         ax.set_xlabel("wejście")
         if col == 0:
             ax.set_ylabel(f"W warstwy {layer_i + 1}\nneuron")
