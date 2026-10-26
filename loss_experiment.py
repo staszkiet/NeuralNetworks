@@ -164,8 +164,6 @@ def main():
         keys = list(SCENARIOS.keys())
     elif SCENARIO in SCENARIOS:
         keys = [SCENARIO]
-    else:
-        raise SystemExit(f"Nieznany SCENARIO={SCENARIO!r}. Dostępne: {', '.join(SCENARIOS)}, all")
 
     runner = MLPExperimentRunner(data_dir=base_dir)
 
@@ -173,9 +171,6 @@ def main():
         cfg = SCENARIOS[key]
         train_path = os.path.join(base_dir, cfg["train_file"])
         test_full = os.path.join(base_dir, test_file_for(cfg["train_file"]))
-        if not os.path.exists(train_path) or not os.path.exists(test_full):
-            print(f"Pominięto {key}: brak plików train/test")
-            continue
 
         rows = []
         for loss_func in cfg["loss_funcs"]:
