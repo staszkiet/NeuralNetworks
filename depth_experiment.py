@@ -128,7 +128,7 @@ def print_results(cfg, rows):
 def plot_results(cfg, rows):
     is_clf = rows[0]["accuracy"] is not None
     metric = [(r["accuracy"] * 100 if is_clf else r["test_loss"]) for r in rows]
-    metric_label = "Accuracy test [%]" if is_clf else f"Loss test ({cfg['loss_func'].upper()})"
+    metric_label = "Dokładność dla danych testowych [%]" if is_clf else f"Loss test ({cfg['loss_func'].upper()})"
 
     fig, ax = plt.subplots(figsize=(11, 5))
     x = np.arange(len(rows))

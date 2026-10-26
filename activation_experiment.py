@@ -84,7 +84,7 @@ def print_table(cfg, results):
     print(f"{cfg['label']} | {cfg['output_note']}")
     print(f"Plik treningowy: {cfg['train_file']}")
     print(f"{'=' * 72}")
-    print(f"{'Aktywacja ukryta':<18} {'Loss train':>12} {'Loss test':>12} {'Accuracy':>12}")
+    print(f"{'Aktywacja ukryta':<18} {'Loss train':>12} {'Loss test':>12} {'Dokł. test':>12}")
     print("-" * 72)
     for act, row in results.items():
         acc_str = f"{row['accuracy'] * 100:>10.2f}%" if row["accuracy"] is not None else "         —"
@@ -111,8 +111,8 @@ def plot_scenario(cfg, results):
     if is_clf:
         accs = [results[a]["accuracy"] * 100 for a in acts]
         axes[1].bar(acts, accs, color=["#4C72B0", "#55A868", "#C44E52"])
-        axes[1].set_title("Dokładność na teście")
-        axes[1].set_ylabel("Accuracy [%]")
+        axes[1].set_title("Dokładność dla danych testowych")
+        axes[1].set_ylabel("Dokładność [%]")
         axes[1].set_ylim(0, 100)
         axes[1].grid(True, axis="y", linestyle="--", alpha=0.5)
 

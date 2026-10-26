@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
 
-TASK = "activation"  # activation | cube | simple | three_gauss
+TASK = "simple"  # activation | cube | simple | three_gauss
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -48,20 +48,13 @@ EXPERIMENTS = {
 
 
 def snapshot_epoch_indices(n_epochs):
-    """Kilka epok równomiernie: początek, środek, koniec."""
     if n_epochs <= 1:
         return [0]
     candidates = [0, n_epochs // 4, n_epochs // 2, (3 * n_epochs) // 4, n_epochs - 1]
     return sorted(set(candidates))
 
-
-if TASK not in EXPERIMENTS:
-    raise SystemExit(f"Nieznany TASK={TASK!r}. Dostępne: {', '.join(EXPERIMENTS)}")
-
 cfg = EXPERIMENTS[TASK]
 train_path = os.path.join(base_dir, cfg["train_file"])
-if not os.path.exists(train_path):
-    raise SystemExit(f"Brak pliku: {cfg['train_file']}")
 
 runner = MLPExperimentRunner(data_dir=base_dir)
 runner.configure_model(
@@ -81,7 +74,7 @@ weight_history = history["weights"]
 n_layers = len(weight_history[0])
 snap_idxs = snapshot_epoch_indices(len(weight_history))
 
-# --- Wykres 1: norma Frobeniusa wag w każdej warstwie vs epoka ---
+# --- Wykres 1: norma Frobeniusa wag w każdej warstwie vs epoch ---
 plt.figure(figsize=(9, 5))
 epochs_x = range(1, len(weight_history) + 1)
 for layer_i in range(n_layers):

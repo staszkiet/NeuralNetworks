@@ -109,7 +109,7 @@ def print_table(cfg, rows):
     print(f"{cfg['label']}")
     print(f"{'=' * 80}")
     if is_clf:
-        print(f"{'Loss uczenia':<12} {'Loss train':>12} {'Loss test':>12} {'Accuracy test':>14}")
+        print(f"{'Loss uczenia':<12} {'Loss train':>12} {'Loss test':>12} {'Dokł. test':>14}")
         print("-" * 80)
         for r in rows:
             print(
@@ -133,9 +133,9 @@ def plot_results(cfg, rows):
     if is_clf:
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         axes[0].bar(labels, [r["accuracy"] * 100 for r in rows], color=["#4C72B0", "#55A868"])
-        axes[0].set_ylabel("Accuracy test [%]")
+        axes[0].set_ylabel("Dokładność [%]")
         axes[0].set_ylim(0, 100)
-        axes[0].set_title("Skuteczność (accuracy)")
+        axes[0].set_title("Dokładność dla danych testowych")
         axes[0].grid(True, axis="y", linestyle="--", alpha=0.5)
         axes[1].bar(labels, [r["test_loss"] for r in rows], color=["#4C72B0", "#55A868"])
         axes[1].set_ylabel("Loss test")
