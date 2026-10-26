@@ -146,7 +146,7 @@ class MultiLayerPerceptron:
             elif self.task_type == 'binary_classification':
                 dZ = d_loss * ActivationFunctions.sigmoid_prime(Z_last)
             else:
-                dZ = d_loss
+                dZ = AL * (d_loss - np.sum(AL * d_loss, axis=0, keepdims=True))
 
         # Propagacja wsteczna przez warstwy ukryte
         for l in range(self.L, 0, -1):
@@ -166,6 +166,13 @@ class MultiLayerPerceptron:
     def fit(self, X, Y, epochs=100, learning_rate=0.01, batch_size=32, task_type='regression', loss_func='mse'):
         self.task_type = task_type
         self.loss_func = loss_func
+
+        if task_type == 'regression':
+            self.x_mean, self.x_std = X.mean(axis=1, keepdims=True), X.std(axis=1, keepdims=True)
+            self.y_mean, self.y_std = Y.mean(axis=1, keepdims=True), Y.std(axis=1, keepdims=True)
+            X = (X - self.x_mean) / self.x_std
+            Y = (Y - self.y_mean) / self.y_std
+
         n_samples = X.shape[1]
         history = {'loss': [], 'weights': []}
         
@@ -185,7 +192,7 @@ class MultiLayerPerceptron:
                 Y_batch = Y_shuffled[:, start_idx:end_idx]
                 
                 Y_hat = self.forward(X_batch)
-                batch_loss = self.compute_loss(Y_hat, Y_batch)
+                batch_loss = self.compute_loss(self._denormalize_y(Y_hat), self._denormalize_y(Y_batch))
                 epoch_loss += batch_loss * (end_idx - start_idx)
                 
                 self.backward(Y_batch)
@@ -200,5 +207,12 @@ class MultiLayerPerceptron:
                 
         return history
 
+    def _denormalize_y(self, Y):
+        if self.task_type == 'regression':
+            return Y * self.y_std + self.y_mean
+        return Y
+
     def predict(self, X):
-        return self.forward(X)
+        if self.task_type == 'regression':
+            X = (X - self.x_mean) / self.x_std
+        return self._denormalize_y(self.forward(X))
