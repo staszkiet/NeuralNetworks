@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
-from vis_helpers import test_path, xy_bounds, classification_grid
+from vis_helpers import test_path, xy_bounds, classification_grid, save_fig
 
 
 def labels_multiclass(Y):
@@ -47,4 +47,5 @@ for ax, (X, Y, title) in zip(axes[0], datasets):
 
 fig.suptitle("Klasyfikacja wieloklasowa (three_gauss)")
 fig.tight_layout()
+save_fig("klasyfikacja_three_gauss")
 plt.show()

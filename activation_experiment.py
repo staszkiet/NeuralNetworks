@@ -12,14 +12,15 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from MLPRunner import MLPExperimentRunner
-from vis_helpers import test_path as test_file_for
+from vis_helpers import test_path as test_file_for, average_runs, pm, plot_curves, save_fig, save_runs
 
 SCENARIO = "all"
 
 HIDDEN_ACTIVATIONS = ["sigmoid", "tanh", "relu"]
 SEED = 42
+N_RUNS = 5  # przebiegi n = 1..N_RUNS z ziarnem SEED * n
 EPOCHS = 300
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.1
 BATCH_SIZE = 32
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -56,12 +57,12 @@ SCENARIOS = {
 }
 
 
-def run_one(runner, cfg, hidden_activation):
+def run_one(runner, cfg, hidden_activation, seed):
     runner.configure_model(
         layer_dims=cfg["layer_dims"],
         hidden_activation=hidden_activation,
         loss_func=cfg["loss_func"],
-        seed=SEED,
+        seed=seed,
     )
     history = runner.run_experiment(
         cfg["train_file"],
@@ -76,7 +77,7 @@ def run_one(runner, cfg, hidden_activation):
     else:
         test_loss = runner.evaluate(test_file)
         accuracy = None
-    return {"train_loss": train_loss, "test_loss": test_loss, "accuracy": accuracy}
+    return {"train_loss": train_loss, "test_loss": test_loss, "accuracy": accuracy, "curve": np.array(history["loss"])}
 
 
 def print_table(cfg, results):
@@ -84,12 +85,13 @@ def print_table(cfg, results):
     print(f"{cfg['label']} | {cfg['output_note']}")
     print(f"Plik treningowy: {cfg['train_file']}")
     print(f"{'=' * 72}")
-    print(f"{'Aktywacja ukryta':<18} {'Loss train':>12} {'Loss test':>12} {'Dokł. test':>12}")
+    print(f"Średnia ± std z {N_RUNS} przebiegów (ziarna {SEED}·n)")
+    print(f"{'Aktywacja ukryta':<18} {'Loss train':>24} {'Loss test':>24} {'Dokł. test [%]':>16}")
     print("-" * 72)
     for act, row in results.items():
-        acc_str = f"{row['accuracy'] * 100:>10.2f}%" if row["accuracy"] is not None else "         —"
+        acc_str = pm(row, "accuracy", 100, 2) if row["accuracy"] is not None else "—"
         print(
-            f"{act:<18} {row['train_loss']:>12.4f} {row['test_loss']:>12.4f} {acc_str:>12}"
+            f"{act:<18} {pm(row, 'train_loss'):>24} {pm(row, 'test_loss'):>24} {acc_str:>16}"
         )
 
 
@@ -103,22 +105,23 @@ def plot_scenario(cfg, results):
     if ncols == 1:
         axes = [axes]
 
-    axes[0].bar(acts, test_losses, color=["#4C72B0", "#55A868", "#C44E52"])
+    axes[0].bar(acts, test_losses, yerr=[results[a]["test_loss_std"] for a in acts], capsize=4,
+                color=["#4C72B0", "#55A868", "#C44E52"])
     axes[0].set_title(f"Strata testowa ({cfg['loss_func'].upper()})")
     axes[0].set_ylabel("Loss")
     axes[0].grid(True, axis="y", linestyle="--", alpha=0.5)
 
     if is_clf:
         accs = [results[a]["accuracy"] * 100 for a in acts]
-        axes[1].bar(acts, accs, color=["#4C72B0", "#55A868", "#C44E52"])
+        axes[1].bar(acts, accs, yerr=[results[a]["accuracy_std"] * 100 for a in acts], capsize=4,
+                    color=["#4C72B0", "#55A868", "#C44E52"])
         axes[1].set_title("Dokładność dla danych testowych")
         axes[1].set_ylabel("Dokładność [%]")
         axes[1].set_ylim(0, 100)
         axes[1].grid(True, axis="y", linestyle="--", alpha=0.5)
 
-    fig.suptitle(f"{cfg['label']}\nAktywacja ukryta | {cfg['output_note']}")
+    fig.suptitle(f"{cfg['label']}\nAktywacja ukryta | {cfg['output_note']} | średnia ± std z {N_RUNS} przebiegów")
     fig.tight_layout()
-    plt.show()
 
 
 def main():
@@ -136,12 +139,22 @@ def main():
         test_full = os.path.join(base_dir, test_file)
 
         results = {}
+        all_runs = []
         for act in HIDDEN_ACTIVATIONS:
-            print(f"\n--- {cfg['label']} | aktywacja ukryta: {act} ---")
-            results[act] = run_one(runner, cfg, act)
+            runs = []
+            for n in range(1, N_RUNS + 1):
+                print(f"\n--- {cfg['label']} | aktywacja ukryta: {act} | przebieg {n} ---")
+                runs.append({"aktywacja": act, "seed": SEED * n, **run_one(runner, cfg, act, SEED * n)})
+            results[act] = average_runs(runs)
+            all_runs += runs
 
         print_table(cfg, results)
+        save_runs(all_runs, f"aktywacje_{key}")
         plot_scenario(cfg, results)
+        save_fig(f"aktywacje_{key}")
+        plot_curves(f"{cfg['label']} — krzywe uczenia ({N_RUNS} przebiegów)", results.items())
+        save_fig(f"aktywacje_{key}_krzywe")
+        plt.show()
 
 
 if __name__ == "__main__":

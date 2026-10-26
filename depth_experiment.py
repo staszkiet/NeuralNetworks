@@ -9,13 +9,14 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from MLPRunner import MLPExperimentRunner
-from vis_helpers import test_path as test_file_for
+from vis_helpers import test_path as test_file_for, average_runs, pm, plot_curves, save_fig, save_runs
 
 SCENARIO = "all"
 
 SEED = 42
+N_RUNS = 5  # przebiegi n = 1..N_RUNS z ziarnem SEED * n
 EPOCHS = 300
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.1
 BATCH_SIZE = 32
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -77,12 +78,12 @@ def build_architectures(input_dim, output_dim):
     return archs
 
 
-def run_architecture(runner, cfg, arch):
+def run_architecture(runner, cfg, arch, seed):
     runner.configure_model(
         layer_dims=arch["layer_dims"],
         hidden_activation=cfg["hidden_activation"],
         loss_func=cfg["loss_func"],
-        seed=SEED,
+        seed=seed,
     )
     history = runner.run_experiment(
         cfg["train_file"],
@@ -102,6 +103,7 @@ def run_architecture(runner, cfg, arch):
         "test_loss": test_loss,
         "accuracy": accuracy,
         "layer_dims": arch["layer_dims"],
+        "curve": np.array(history["loss"]),
     }
 
 
@@ -110,37 +112,38 @@ def print_results(cfg, rows):
     print(f"\n{'=' * 88}")
     print(f"{cfg['label']} | aktywacja ukryta: {cfg['hidden_activation']}")
     print(f"{'=' * 88}")
+    print(f"Średnia ± std z {N_RUNS} przebiegów (ziarna {SEED}·n)")
     if is_clf:
-        print(f"{'# ukrytych':<10} {'Architektura':<28} {'layer_dims':<24} {'Loss test':>10} {'Acc test':>10}")
+        print(f"{'# ukrytych':<10} {'Architektura':<28} {'layer_dims':<24} {'Loss test':>24} {'Acc test [%]':>16}")
     else:
-        print(f"{'# ukrytych':<10} {'Architektura':<28} {'layer_dims':<24} {'Loss test':>10}")
+        print(f"{'# ukrytych':<10} {'Architektura':<28} {'layer_dims':<24} {'Loss test':>24}")
     print("-" * 88)
     for row in rows:
         line = (
             f"{row['n_hidden']:<10} {row['name']:<28} {str(row['layer_dims']):<24} "
-            f"{row['test_loss']:>10.4f}"
+            f"{pm(row, 'test_loss'):>24}"
         )
         if is_clf:
-            line += f" {row['accuracy'] * 100:>9.2f}%"
+            line += f" {pm(row, 'accuracy', 100, 2):>16}"
         print(line)
 
 
 def plot_results(cfg, rows):
     is_clf = rows[0]["accuracy"] is not None
     metric = [(r["accuracy"] * 100 if is_clf else r["test_loss"]) for r in rows]
+    metric_std = [(r["accuracy_std"] * 100 if is_clf else r["test_loss_std"]) for r in rows]
     metric_label = "Dokładność dla danych testowych [%]" if is_clf else f"Loss test ({cfg['loss_func'].upper()})"
 
     fig, ax = plt.subplots(figsize=(11, 5))
     x = np.arange(len(rows))
     colors = plt.cm.viridis([r["n_hidden"] / 4.0 for r in rows])
-    ax.bar(x, metric, color=colors)
+    ax.bar(x, metric, yerr=metric_std, capsize=3, color=colors)
     ax.set_xticks(x)
     ax.set_xticklabels([f"{r['n_hidden']}h\n{r['layer_dims']}" for r in rows], rotation=55, ha="right", fontsize=8)
     ax.set_ylabel(metric_label)
-    ax.set_title(f"{cfg['label']} — głębokość i szerokość")
+    ax.set_title(f"{cfg['label']} — głębokość i szerokość (średnia ± std z {N_RUNS} przebiegów)")
     ax.grid(True, axis="y", linestyle="--", alpha=0.5)
     fig.tight_layout()
-    plt.show()
 
 
 def main():
@@ -157,12 +160,24 @@ def main():
         test_full = os.path.join(base_dir, test_file_for(cfg["train_file"]))
 
         rows = []
+        all_runs = []
         for arch in build_architectures(cfg["input_dim"], cfg["output_dim"]):
-            print(f"\n--- {cfg['label']} | {arch['name']} | {arch['layer_dims']} ---")
-            rows.append({"n_hidden": arch["n_hidden"], "name": arch["name"], **run_architecture(runner, cfg, arch)})
+            runs = []
+            for n in range(1, N_RUNS + 1):
+                print(f"\n--- {cfg['label']} | {arch['name']} | {arch['layer_dims']} | przebieg {n} ---")
+                runs.append({"n_hidden": arch["n_hidden"], "name": arch["name"], "seed": SEED * n,
+                             **run_architecture(runner, cfg, arch, SEED * n)})
+            rows.append(average_runs(runs))
+            all_runs += runs
 
         print_results(cfg, rows)
+        save_runs(all_runs, f"glebokosc_{key}")
         plot_results(cfg, rows)
+        save_fig(f"glebokosc_{key}")
+        plot_curves(f"{cfg['label']} — krzywe uczenia ({N_RUNS} przebiegów)",
+                    [(f"{r['n_hidden']}h {r['layer_dims']}", r) for r in rows])
+        save_fig(f"glebokosc_{key}_krzywe")
+        plt.show()
 
 
 if __name__ == "__main__":

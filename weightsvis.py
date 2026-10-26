@@ -6,6 +6,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
+from vis_helpers import save_fig
 
 TASK = "simple"  # activation | cube | simple | three_gauss
 
@@ -86,6 +87,7 @@ plt.ylabel("||W||_F")
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.legend()
 plt.tight_layout()
+save_fig(f"wagi_norma_{TASK}")
 plt.show()
 
 # --- Wykres 2: mapy ciepła W w wybranych epoch (wiersz = warstwa) ---
@@ -107,6 +109,8 @@ for layer_i in range(n_layers):
 
 fig.suptitle(f"Macierze wag — {cfg['task_label']}\n{cfg['train_file']}", y=1.02)
 fig.tight_layout()
+fig.subplots_adjust(right=0.9)
 cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
 fig.colorbar(im, cax=cbar_ax, label="waga")
+save_fig(f"wagi_macierze_{TASK}")
 plt.show()

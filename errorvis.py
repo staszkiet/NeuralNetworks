@@ -4,6 +4,7 @@ Krzywa straty względem epoch. Ustaw TASK na jeden z: activation, cube, simple, 
 import os
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
+from vis_helpers import save_fig
 
 TASK = "three_gauss"  # activation | cube | simple | three_gauss
 
@@ -72,4 +73,5 @@ plt.xlabel("Epoch")
 plt.ylabel("Strata")
 plt.grid(True, linestyle="--", alpha=0.5)
 plt.legend()
+save_fig(f"blad_{TASK}")
 plt.show()

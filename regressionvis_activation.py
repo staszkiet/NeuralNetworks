@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
-from vis_helpers import test_path
+from vis_helpers import test_path, save_fig
 
 
 def plot_regression(ax, runner, X, Y, subtitle):
@@ -41,4 +41,5 @@ for ax, (X, Y, title) in zip(axes[0], panels):
     plot_regression(ax, runner, X, Y, title)
 fig.suptitle("Regresja (activation)")
 fig.tight_layout()
+save_fig("regresja_activation")
 plt.show()
