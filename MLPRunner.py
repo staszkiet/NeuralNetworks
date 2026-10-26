@@ -62,8 +62,6 @@ class MLPExperimentRunner:
         """
         Uruchamia trening na podstawie wcześniej skonfigurowanego modelu.
         """
-        if self.model is None or self.loss_func is None:
-            raise ValueError("Najpierw skonfiguruj model za pomocą metody configure_model()!")
             
         X_train, Y_train = self.load_dataset(train_file)
         

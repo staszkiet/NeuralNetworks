@@ -1,11 +1,18 @@
-"""Wizualizacja klasyfikacji wieloklasowej: data.three_gauss (2D)."""
+"""Wizualizacja klasyfikacji wieloklasowej: data.three_gauss (2D) — train i test."""
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
+from vis_helpers import test_path, xy_bounds, classification_grid
+
+
+def labels_multiclass(Y):
+    return np.argmax(Y, axis=0)
+
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 train_file = os.path.join("classification", "data.three_gauss.train.1000.csv")
+test_file = test_path(train_file)
 
 runner = MLPExperimentRunner(data_dir=base_dir)
 if not os.path.exists(os.path.join(base_dir, train_file)):
@@ -21,19 +28,26 @@ runner.configure_model(
 runner.run_experiment(train_file, epochs=300, learning_rate=0.01, batch_size=32)
 
 X_train, Y_train = runner.load_dataset(train_file)
-y_labels = np.argmax(Y_train, axis=0)
+datasets = [(X_train, Y_train, f"Trening\n{train_file}")]
 
-x_min, x_max = X_train[0].min() - 0.5, X_train[0].max() + 0.5
-y_min, y_max = X_train[1].min() - 0.5, X_train[1].max() + 0.5
-xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
-grid = np.c_[xx.ravel(), yy.ravel()].T
+if os.path.exists(os.path.join(base_dir, test_file)):
+    X_test, Y_test = runner.load_dataset(test_file)
+    datasets.append((X_test, Y_test, f"Test\n{test_file}"))
+    runner.evaluate(test_file)
+
+x_min, x_max, y_min, y_max = xy_bounds(*[(X, Y) for X, Y, _ in datasets])
+xx, yy, grid = classification_grid(x_min, x_max, y_min, y_max)
 Z_class = np.argmax(runner.model.predict(grid), axis=0).reshape(xx.shape)
 
-plt.figure(figsize=(8, 6))
-plt.contourf(xx, yy, Z_class, alpha=0.35, cmap="RdYlBu")
-plt.scatter(X_train[0], X_train[1], c=y_labels, cmap="RdYlBu", edgecolors="k", s=30)
-plt.title(f"Klasyfikacja wieloklasowa (three_gauss)\n{train_file}")
-plt.xlabel("X1")
-plt.ylabel("X2")
-plt.grid(True, linestyle="--", alpha=0.5)
+fig, axes = plt.subplots(1, len(datasets), figsize=(7 * len(datasets), 6), squeeze=False)
+for ax, (X, Y, title) in zip(axes[0], datasets):
+    ax.contourf(xx, yy, Z_class, alpha=0.35, cmap="RdYlBu")
+    ax.scatter(X[0], X[1], c=labels_multiclass(Y), cmap="RdYlBu", edgecolors="k", s=30)
+    ax.set_title(title)
+    ax.set_xlabel("X1")
+    ax.set_ylabel("X2")
+    ax.grid(True, linestyle="--", alpha=0.5)
+
+fig.suptitle("Klasyfikacja wieloklasowa (three_gauss)")
+fig.tight_layout()
 plt.show()

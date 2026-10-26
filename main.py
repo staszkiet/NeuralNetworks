@@ -87,8 +87,6 @@ class MultiLayerPerceptron:
             'tanh': (ActivationFunctions.tanh, ActivationFunctions.tanh_prime),
             'relu': (ActivationFunctions.relu, ActivationFunctions.relu_prime)
         }
-        if hidden_activation not in act_map:
-            raise ValueError(f"Nieznana funkcja aktywacji: {hidden_activation}")
             
         self.hidden_activation, self.hidden_activation_prime = act_map[hidden_activation]
         
@@ -133,8 +131,6 @@ class MultiLayerPerceptron:
             return LossFunctions.bce(Y_hat, Y)
         elif self.loss_func == 'cce':
             return LossFunctions.cce(Y_hat, Y)
-        else:
-            raise ValueError(f"Nieobsługiwana funkcja straty: {self.loss_func}")
 
     def backward(self, Y):
         """Propagacja wsteczna (Backpropagation)"""
