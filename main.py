@@ -68,7 +68,7 @@ class MultiLayerPerceptron:
         if seed is not None:
             np.random.seed(seed)
             
-        self.L = len(layer_dims) - 1  # Liczba warstw (bez wejściowej)
+        self.L = len(layer_dims) - 1
         self.W = []
         self.b = []
         
@@ -80,7 +80,6 @@ class MultiLayerPerceptron:
             
         self.hidden_activation, self.hidden_activation_prime = act_map[hidden_activation]
         
-        # Inicjalizacja wag i biasów (He initialization)
         for l in range(1, self.L + 1):
             w = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2.0 / layer_dims[l-1])
             b = np.zeros((layer_dims[l], 1))
@@ -125,17 +124,13 @@ class MultiLayerPerceptron:
         AL = self.cache[f'A{self.L}']
         Z_last = self.cache[f'Z{self.L}']
         
-        # Sygnał błędu delta dla ostatniej warstwy (delta^[L])
-        # Zgodnie z wykładem dla sparowanych par (Loss + Activation) wychodzi uproszczenie do (y_hat - y)
         if (self.loss_func == 'mse' and self.task_type == 'regression') or \
            (self.loss_func == 'bce' and self.task_type == 'binary_classification') or \
            (self.loss_func == 'cce' and self.task_type == 'multiclass_classification'):
             dZ = AL - Y
         elif self.loss_func == 'mse' and self.task_type == 'binary_classification':
-            # Celowe badanie MSE z sigmoidą (uwaga na nasycenie z wykładu)
             dZ = (AL - Y) * ActivationFunctions.sigmoid_prime(Z_last)
         else:
-            # Ogólny przypadek numeryczny
             if self.loss_func == 'mae':
                 d_loss = np.sign(AL - Y)
             else:
@@ -148,7 +143,6 @@ class MultiLayerPerceptron:
             else:
                 dZ = AL * (d_loss - np.sum(AL * d_loss, axis=0, keepdims=True))
 
-        # Propagacja wsteczna przez warstwy ukryte
         for l in range(self.L, 0, -1):
             A_prev = self.cache[f'A{l-1}']
             self.grads[f'dW{l}'] = np.dot(dZ, A_prev.T) / m
