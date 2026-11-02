@@ -11,6 +11,8 @@ import contextlib
 import io
 import os
 import time
+from concurrent.futures import ProcessPoolExecutor
+os.environ["OPENBLAS_NUM_THREADS"] = "10"
 import matplotlib.pyplot as plt
 import numpy as np
 from main import MultiLayerPerceptron
@@ -78,7 +80,7 @@ def train(cfg, seed):
     elapsed = time.time() - start
 
     test_loss = model.compute_loss(model.predict(X_test), Y_test)
-    return model, {
+    return {
         "train_loss": loss_curve[-1],
         "test_loss": float(test_loss),
         "train_accuracy": train_acc_curve[-1],
@@ -149,11 +151,10 @@ def run_experiment(key):
     for value in exp["values"]:
         cfg = {**BASE, exp["param"]: value}
         label = value_label(value)
-        runs = []
-        for n in range(1, N_RUNS + 1):
-            print(f"\n--- MNIST | {exp['param']} = {label} | przebieg {n} ---")
-            _, row = train(cfg, SEED * n)
-            runs.append({exp["param"]: label, "seed": SEED * n, **row})
+        print(f"\n--- MNIST | {exp['param']} = {label} ---")
+        with ProcessPoolExecutor(N_RUNS) as pool:
+            rows = pool.map(train, [cfg] * N_RUNS, [SEED * n for n in range(1, N_RUNS + 1)])
+        runs = [{exp["param"]: label, "seed": SEED * n, **row} for n, row in enumerate(rows, 1)]
         results[label] = average_runs(runs)
         all_runs += runs
 
