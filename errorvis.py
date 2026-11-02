@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from MLPRunner import MLPExperimentRunner
 from vis_helpers import save_fig
 
-TASK = "three_gauss"  # activation | cube | simple | three_gauss
+TASK = "activation"  # activation | cube | simple | three_gauss
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
